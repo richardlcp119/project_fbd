@@ -34,13 +34,32 @@
             height: max-content; /* Penting: mencegah sidebar merentang setinggi konten kanan */
             z-index: 10;
         }
+        .styled-select option {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+        }
         
-        /* Layout Grid */
+        /* Layout & Lebar Fleksibel */
+        .dashboard-container, .app-header {
+            max-width: 95% !important; 
+        }
+
+        /* Layout Grid KPI */
         .kpi-grid {
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important; 
             gap: 15px;
         }
+
+        /* Penyesuaian Teks Angka KPI Panjang */
+        .metric-value {
+            font-size: clamp(18px, 1.8vw, 26px) !important;
+            white-space: nowrap; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Area Grafik */
         .chart-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -86,49 +105,48 @@
         <!-- KOLOM KIRI: FILTER DATA               -->
         <!-- ===================================== -->
         <div class="sticky-sidebar">
-            <form id="filterForm">
+            <form id="filterForm" method="GET" action="/">
                 <div class="card">
                     <div class="card-header"><i data-lucide="search"></i> Filter Data</div>
                     
-                    <div style="font-size: 12px; color: var(--ios-orange); margin-bottom: 20px; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 10px; background: rgba(255, 149, 0, 0.1); border-radius: 8px;">
-                        <i data-lucide="info" style="width: 16px;"></i> UI Filter Belum Aktif
-                    </div>
-
                     <label class="filter-label">Kategori Produk</label>
-                    <select class="styled-select">
+                    <select name="category" class="styled-select">
                         <option value="">-- Semua Kategori --</option>
                         {% for item in filters.categories %}
-                            <option value="{{ item }}">{{ item }}</option>
+                            <option value="{{ item }}" {% if request.args.get('category') == item %}selected{% endif %}>{{ item }}</option>
                         {% endfor %}
                     </select>
 
                     <label class="filter-label">Provinsi</label>
-                    <select class="styled-select">
+                    <select name="province" class="styled-select">
                         <option value="">-- Semua Provinsi --</option>
                         {% for item in filters.provinces %}
-                            <option value="{{ item }}">{{ item }}</option>
+                            <option value="{{ item }}" {% if request.args.get('province') == item %}selected{% endif %}>{{ item }}</option>
                         {% endfor %}
                     </select>
 
                     <label class="filter-label">Status Pesanan</label>
-                    <select class="styled-select">
+                    <select name="status" class="styled-select">
                         <option value="">-- Semua Status --</option>
                         {% for item in filters.statuses %}
-                            <option value="{{ item }}">{{ item }}</option>
+                            <option value="{{ item }}" {% if request.args.get('status') == item %}selected{% endif %}>{{ item }}</option>
                         {% endfor %}
                     </select>
 
                     <label class="filter-label">Metode Pembayaran</label>
-                    <select class="styled-select">
+                    <select name="payment" class="styled-select">
                         <option value="">-- Semua Metode --</option>
                         {% for item in filters.payments %}
-                            <option value="{{ item }}">{{ item }}</option>
+                            <option value="{{ item }}" {% if request.args.get('payment') == item %}selected{% endif %}>{{ item }}</option>
                         {% endfor %}
                     </select>
 
-                    <button type="button" class="btn-action" style="margin-top: 5px; opacity: 0.6; cursor: not-allowed;">
+                    <button type="submit" class="btn-action" style="margin-top: 5px;">
                         <i data-lucide="filter" style="fill: white; width: 18px;"></i> Terapkan Filter
                     </button>
+                    
+                    <!-- Tombol Reset Opsional -->
+                    <a href="/" style="display: block; text-align: center; margin-top: 15px; font-size: 13px; color: var(--ios-red); text-decoration: none; font-weight: 600;">Reset Filter</a>
                 </div>
             </form>
         </div>
@@ -160,6 +178,36 @@
                     <div class="metric-value">{{ kpi.return_rate }}</div>
                 </div>
             </div>
+
+            <!-- ===================================== -->
+            <!-- BLOK INTERPRETASI & REKOMENDASI       -->
+            <!-- ===================================== -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                
+                <!-- Interpretasi Singkat -->
+                <div class="card" style="margin-bottom: 0; border-left: 4px solid var(--ios-blue);">
+                    <div class="card-header" style="margin-bottom: 8px; font-size: 15px;">
+                        <i data-lucide="lightbulb" style="color: var(--ios-blue); width: 18px;"></i> Interpretasi Singkat
+                    </div>
+                    <p style="font-size: 13px; line-height: 1.6; color: var(--text-muted); font-weight: 500;">
+                        Dari data yang difilter, kategori dengan kontribusi terbesar adalah <strong style="color: var(--text-main);">{{ insights.top_category }}</strong> dengan total <strong style="color: var(--text-main);">{{ insights.top_category_val }}</strong>. 
+                        Wilayah pemesanan tertinggi berasal dari provinsi <strong style="color: var(--text-main);">{{ insights.top_province }}</strong>.
+                    </p>
+                </div>
+
+                <!-- Rekomendasi -->
+                <div class="card" style="--rec-color: {{ insights.rec_color }}; margin-bottom: 0; border-left: 4px solid var(--rec-color); background: rgba(118, 118, 128, 0.05);">
+                    <div class="card-header" style="margin-bottom: 8px; font-size: 15px;">
+                        <i data-lucide="target" style="color: var(--rec-color); width: 18px;"></i> Rekomendasi Awal
+                    </div>
+                    <p style="font-size: 13px; line-height: 1.6; color: var(--text-muted); font-weight: 500;">
+                        {{ insights.recommendation }}
+                        Fokuskan stok dan promosi pada <strong style="color: var(--text-main);">{{ insights.top_category }}</strong> di area <strong style="color: var(--text-main);">{{ insights.top_province }}</strong>.
+                    </p>
+                </div>
+                
+            </div>
+            <!-- ===================================== -->
 
             <!-- Grafik Tren -->
             <div class="card" style="margin-top: 20px;">

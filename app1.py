@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
@@ -50,15 +50,31 @@ def index():
     if df.empty:
         return "File data_clean.csv tidak ditemukan atau kosong. Pastikan file ada di direktori yang sama dengan app1.py"
 
-    # ==========================================
-    # 1. Menghitung KPI (Data Keseluruhan)
-    # ==========================================
-    orders = df["order_id"].nunique() if "order_id" in df.columns else 0
-    revenue = df["total_pembayaran"].sum() if "total_pembayaran" in df.columns else 0
+    # ----- 1. Tangkap Parameter Filter (Mirip $_GET) -----
+    cat_filter = request.args.get('category', '')
+    prov_filter = request.args.get('province', '')
+    stat_filter = request.args.get('status', '')
+    pay_filter = request.args.get('payment', '')
+
+    # Salin df utama untuk dipotong
+    filtered_df = df.copy()
+
+    if cat_filter:
+        filtered_df = filtered_df[filtered_df['product_categories'] == cat_filter]
+    if prov_filter:
+        filtered_df = filtered_df[filtered_df['provinsi'] == prov_filter]
+    if stat_filter:
+        filtered_df = filtered_df[filtered_df['status_group'] == stat_filter]
+    if pay_filter:
+        filtered_df = filtered_df[filtered_df['metode_pembayaran'] == pay_filter]
+
+    # ----- 2. Hitung KPI Menggunakan data yang sudah di-filter (filtered_df) -----
+    orders = filtered_df["order_id"].nunique() if "order_id" in filtered_df.columns else 0
+    revenue = filtered_df["total_pembayaran"].sum() if "total_pembayaran" in filtered_df.columns else 0
     avg_order_value = revenue / orders if orders else 0
-    cancel_rate = (df["status_group"].eq("Batal").mean() * 100) if len(df) else 0
-    returned_qty = df["total_returned_qty"].sum() if "total_returned_qty" in df.columns else 0
-    total_qty = df["total_qty"].sum() if "total_qty" in df.columns else 0
+    cancel_rate = (filtered_df["status_group"].eq("Batal").mean() * 100) if len(filtered_df) else 0
+    returned_qty = filtered_df["total_returned_qty"].sum() if "total_returned_qty" in filtered_df.columns else 0
+    total_qty = filtered_df["total_qty"].sum() if "total_qty" in filtered_df.columns else 0
     return_rate = (returned_qty / total_qty * 100) if total_qty else 0
 
     kpi_data = {
@@ -69,9 +85,7 @@ def index():
         "return_rate": "{:.1f}%".format(return_rate)
     }
 
-    # ==========================================
-    # 2. Menyiapkan Opsi untuk Dropdown Filter
-    # ==========================================
+    # ----- 3. Opsi Dropdown (Tetap pakai df asli agar opsi tidak hilang saat difilter) -----
     def get_options(col_name):
         if col_name in df.columns:
             return sorted(df[col_name].dropna().astype(str).unique().tolist())
@@ -84,11 +98,8 @@ def index():
         "payments": get_options("metode_pembayaran")
     }
 
-    # ==========================================
-    # 3. Menyiapkan Data Grafik (Chart.js)
-    # ==========================================
-    # A. Tren Pembayaran per Bulan
-    valid_dates = df.dropna(subset=["waktu_pesanan_dibuat"]).copy()
+    # ----- 4. Data Grafik (Gunakan filtered_df) -----
+    valid_dates = filtered_df.dropna(subset=["waktu_pesanan_dibuat"]).copy()
     if not valid_dates.empty:
         monthly = valid_dates.groupby(valid_dates["waktu_pesanan_dibuat"].dt.to_period("M"))["total_pembayaran"].sum().reset_index()
         trend_labels = monthly["waktu_pesanan_dibuat"].astype(str).tolist()
@@ -96,14 +107,9 @@ def index():
     else:
         trend_labels, trend_data = [], []
 
-    # B. Top 10 Kategori by Revenue
-    cat = df.groupby("product_categories")["total_pembayaran"].sum().sort_values(ascending=False).head(10)
-    
-    # C. Top 8 Provinsi by Revenue
-    prov = df.groupby("provinsi")["total_pembayaran"].sum().sort_values(ascending=False).head(8)
-    
-    # D. Metode Pembayaran by Jumlah Pesanan
-    pay = df.groupby("metode_pembayaran")["order_id"].nunique().sort_values(ascending=False).head(8)
+    cat = filtered_df.groupby("product_categories")["total_pembayaran"].sum().sort_values(ascending=False).head(10)
+    prov = filtered_df.groupby("provinsi")["total_pembayaran"].sum().sort_values(ascending=False).head(8)
+    pay = filtered_df.groupby("metode_pembayaran")["order_id"].nunique().sort_values(ascending=False).head(8)
 
     charts = {
         "trend": {"labels": trend_labels, "data": trend_data},
@@ -112,7 +118,33 @@ def index():
         "payment": {"labels": pay.index.tolist(), "data": pay.values.tolist()}
     }
 
-    return render_template('dashboard.html', kpi=kpi_data, filters=filters, charts=charts)
+    # ==========================================
+    # 5. Interpretasi & Rekomendasi
+    # ==========================================
+    top_cat_name = cat.index[0] if not cat.empty else "Belum ada data"
+    top_cat_val = rupiah(cat.iloc[0]) if not cat.empty else "Rp 0"
+    
+    top_prov_name = prov.index[0] if not prov.empty else "Belum ada data"
+    top_prov_val = rupiah(prov.iloc[0]) if not prov.empty else "Rp 0"
+
+    # Logika rekomendasi sederhana berdasarkan persentase pembatalan
+    if cancel_rate >= 10:
+        rec_text = "Prioritaskan analisis alasan pembatalan dan evaluasi proses karena proporsi pembatalan relatif tinggi (di atas 10%)."
+        rec_color = "var(--ios-red)"
+    else:
+        rec_text = "Pertahankan proses fulfillment yang ada. Tingkat pembatalan masih dalam batas aman (di bawah 10%)."
+        rec_color = "var(--ios-green)"
+
+    insights = {
+        "top_category": top_cat_name,
+        "top_category_val": top_cat_val,
+        "top_province": top_prov_name,
+        "top_province_val": top_prov_val,
+        "recommendation": rec_text,
+        "rec_color": rec_color
+    }
+
+    return render_template('dashboard.html', kpi=kpi_data, filters=filters, charts=charts, insights=insights)
 
 if __name__ == '__main__':
     app.run(debug=True)
