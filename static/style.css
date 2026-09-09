@@ -88,7 +88,11 @@ body {
 }
 
 /* Header & Toggle */
-.app-header { text-align: center; margin-bottom: 40px; position: relative; max-width: 1200px; margin: 0 auto 40px; }
+.app-header { 
+    text-align: center; 
+    margin: 0 auto 40px; 
+    max-width: 95%;
+}
 .app-header h1 { font-size: 46px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 4px; }
 .app-header .subtitle { color: var(--ios-purple); font-weight: 700; font-size: 16px; margin-bottom: 6px; letter-spacing: 0.5px; }
 .app-header .desc { color: var(--text-muted); font-size: 14px; font-weight: 500; line-height: 1.5; max-width: 500px; margin: 0 auto; }
@@ -111,7 +115,13 @@ body {
     color: var(--ios-blue); font-weight: 600; font-size: 15px;
 }
 
-.dashboard-container { display: grid; grid-template-columns: 360px 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
+.dashboard-container { 
+    display: grid; 
+    grid-template-columns: 360px 1fr; 
+    gap: 20px; 
+    max-width: 95%;
+    margin: 0 auto; 
+}
 
 /* Cards */
 .card {

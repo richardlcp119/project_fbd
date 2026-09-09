@@ -12,10 +12,19 @@
     <!-- Chart.js untuk Grafik -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     
-    <!-- Memanggil CSS Global -->
+    <!-- Memanggil CSS Induk yang Reusable -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     
+    <!-- Style Spesifik Khusus Dashboard Ini -->
     <style>
+        /* Menyesuaikan posisi tombol theme-toggle agar tidak terlalu ke ujung layar */
+        .app-header {
+            position: relative;
+        }
+        .theme-toggle {
+            right: 15px !important; /* Memberi jarak aman dari tepi kanan layar */
+        }
+        
         /* Elemen Select Kustom untuk Filter */
         .styled-select {
             background: var(--input-bg); color: var(--text-main); border: none;
@@ -30,28 +39,23 @@
         }
         .sticky-sidebar {
             position: sticky;
-            top: 20px; /* Jarak elemen dari batas atas layar saat di-scroll */
-            height: max-content; /* Penting: mencegah sidebar merentang setinggi konten kanan */
+            top: 20px;
+            height: max-content;
             z-index: 10;
         }
         .styled-select option {
             background-color: var(--bg-base);
             color: var(--text-main);
         }
-        
-        /* Layout & Lebar Fleksibel */
-        .dashboard-container, .app-header {
-            max-width: 95% !important; 
-        }
 
-        /* Layout Grid KPI */
+        /* Layout Grid KPI Fleksibel */
         .kpi-grid {
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important; 
             gap: 15px;
         }
 
-        /* Penyesuaian Teks Angka KPI Panjang */
+        /* Penyesuaian Teks Angka KPI Panjang Agar Tidak Turun Baris */
         .metric-value {
             font-size: clamp(18px, 1.8vw, 26px) !important;
             white-space: nowrap; 
@@ -72,13 +76,14 @@
             width: 100%;
         }
 
-        /* Responsivitas untuk layar kecil */
+        /* Responsivitas untuk layar kecil / mobile */
         @media (max-width: 900px) {
             .dashboard-container { grid-template-columns: 1fr; }
             .chart-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
+
 <body x-data="{ darkMode: localStorage.getItem('theme') === 'dark' }" 
       :class="{ 'dark': darkMode }" 
       x-init="$watch('darkMode', val => localStorage.setItem('theme', val ? 'dark' : 'light'))">
@@ -145,7 +150,6 @@
                         <i data-lucide="filter" style="fill: white; width: 18px;"></i> Terapkan Filter
                     </button>
                     
-                    <!-- Tombol Reset Opsional -->
                     <a href="/" style="display: block; text-align: center; margin-top: 15px; font-size: 13px; color: var(--ios-red); text-decoration: none; font-weight: 600;">Reset Filter</a>
                 </div>
             </form>
@@ -196,7 +200,7 @@
                 </div>
 
                 <!-- Rekomendasi -->
-                <div class="card" style="--rec-color: {{ insights.rec_color }}; margin-bottom: 0; border-left: 4px solid var(--rec-color); background: rgba(118, 118, 128, 0.05);">
+                <div class="card" style="--rec-color: {{ insights.rec_color }}; margin-bottom: 0; border-left: 4px solid var(--rec-color);">
                     <div class="card-header" style="margin-bottom: 8px; font-size: 15px;">
                         <i data-lucide="target" style="color: var(--rec-color); width: 18px;"></i> Rekomendasi Awal
                     </div>
@@ -252,12 +256,9 @@
     <!-- SCRIPT RENDER GRAFIK CHART.JS         -->
     <!-- ===================================== -->
     <script>
-        // Inisialisasi Icon
         lucide.createIcons();
-
         const chartData = JSON.parse(document.getElementById('chartDataJson').textContent);
         
-        // Setup font & warna umum Chart.js menyesuaikan tema aplikasi
         Chart.defaults.color = 'rgba(142, 142, 147, 0.9)';
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif';
 
@@ -289,11 +290,10 @@
             }
         });
 
-        // Pengaturan umum untuk Grafik Bar Horizontal
         const barOptions = {
             responsive: true, 
             maintainAspectRatio: false,
-            indexAxis: 'y', // Membuat bar chart menjadi menyamping
+            indexAxis: 'y',
             plugins: { legend: { display: false } },
             scales: {
                 x: { beginAtZero: true, grid: { color: 'rgba(142, 142, 147, 0.1)' } },
@@ -301,7 +301,7 @@
             }
         };
 
-        // 2. Grafik Kategori (Horizontal Bar)
+        // 2. Grafik Kategori
         new Chart(document.getElementById('catChart'), {
             type: 'bar',
             data: {
@@ -315,7 +315,7 @@
             options: barOptions
         });
 
-        // 3. Grafik Provinsi (Horizontal Bar)
+        // 3. Grafik Provinsi
         new Chart(document.getElementById('provChart'), {
             type: 'bar',
             data: {
@@ -329,7 +329,7 @@
             options: barOptions
         });
 
-        // 4. Grafik Metode Pembayaran (Horizontal Bar)
+        // 4. Grafik Metode Pembayaran
         new Chart(document.getElementById('payChart'), {
             type: 'bar',
             data: {
