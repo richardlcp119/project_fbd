@@ -1,0 +1,226 @@
+
+:root {
+    /* Light Mode */
+    --bg-base: #F2F2F7;
+    --bg-card: rgba(255, 255, 255, 0.7); 
+    --text-main: #000000;
+    --text-muted: #8E8E93;
+    --border-color: rgba(60, 60, 67, 0.15);
+    
+    --input-bg: rgba(118, 118, 128, 0.12);
+    --segment-bg: rgba(118, 118, 128, 0.12);
+    --segment-active: #FFFFFF;
+    
+    /* iOS System Colors */
+    --ios-blue: #007AFF;
+    --ios-green: #34C759;
+    --ios-orange: #FF9500;
+    --ios-purple: #AF52DE;
+    --ios-red: #FF3B30;
+    --ios-indigo: #5856D6;
+    
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --glass-blur: blur(25px);
+
+    /* Ambient Gradient Colors */
+    --ambient-1: #FFB6FF; 
+    --ambient-2: #B1D4FF; 
+}
+
+.dark {
+    /* Dark Mode */
+    --bg-base: #000000;
+    --bg-card: rgba(28, 28, 30, 0.65);
+    --text-main: #FFFFFF;
+    --text-muted: #EBEBF5;
+    --border-color: rgba(255, 255, 255, 0.15);
+    
+    --input-bg: rgba(118, 118, 128, 0.24);
+    --segment-bg: rgba(118, 118, 128, 0.24);
+    --segment-active: #636366;
+    
+    --ios-blue: #0A84FF;
+    --ios-green: #30D158;
+    --ios-orange: #FF9F0A;
+    --ios-purple: #BF5AF2;
+    --ios-red: #FF453A;
+    --ios-indigo: #5E5CE6;
+    
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+    --ambient-1: #4A00E0; 
+    --ambient-2: #0052D4; 
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    padding: 40px 20px;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    transition: background-color 0.5s ease;
+    z-index: 1;
+}
+
+/* Ambient Background */
+.ambient-bg {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: -1; pointer-events: none; overflow: hidden;
+}
+.orb-1 {
+    position: absolute; top: -10%; left: -10%; width: 60vw; height: 60vw;
+    background: radial-gradient(circle, var(--ambient-1) 0%, rgba(255,255,255,0) 70%);
+    filter: blur(90px); opacity: 0.6; transition: background 0.8s ease;
+}
+.orb-2 {
+    position: absolute; bottom: -10%; right: -10%; width: 60vw; height: 60vw;
+    background: radial-gradient(circle, var(--ambient-2) 0%, rgba(255,255,255,0) 70%);
+    filter: blur(100px); opacity: 0.6; transition: background 0.8s ease;
+}
+
+/* Header & Toggle */
+.app-header { text-align: center; margin-bottom: 40px; position: relative; max-width: 1200px; margin: 0 auto 40px; }
+.app-header h1 { font-size: 46px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 4px; }
+.app-header .subtitle { color: var(--ios-purple); font-weight: 700; font-size: 16px; margin-bottom: 6px; letter-spacing: 0.5px; }
+.app-header .desc { color: var(--text-muted); font-size: 14px; font-weight: 500; line-height: 1.5; max-width: 500px; margin: 0 auto; }
+
+.text-gradient {
+    background: linear-gradient(90deg, #3291FF 0%, #A652FF 33%, #FF3366 66%, #FF7A00 100%);
+    -webkit-background-clip: text;
+    background-clip: text; /* <--- Tambahkan baris ini */
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+.theme-toggle {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    background: var(--bg-card); backdrop-filter: var(--glass-blur); border: 1px solid var(--border-color);
+    padding: 10px 20px; border-radius: 30px; cursor: pointer;
+    box-shadow: var(--shadow-card); transition: all 0.3s;
+}
+.theme-toggle span {
+    color: var(--ios-blue); font-weight: 600; font-size: 15px;
+}
+
+.dashboard-container { display: grid; grid-template-columns: 360px 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
+
+/* Cards */
+.card {
+    background: var(--bg-card); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-color); border-radius: 20px;
+    padding: 22px; margin-bottom: 20px; box-shadow: var(--shadow-card);
+}
+.card-header { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+/* Process Inputs */
+.process-list-header { display: grid; gap: 10px; font-size: 11px; color: var(--text-muted); text-align: center; margin-bottom: 10px; font-weight: 600; align-items: end; padding-bottom: 5px;}
+.process-row { display: grid; gap: 10px; align-items: center; margin-bottom: 12px; }
+
+/* Dynamic Grid Classes untuk Form Priority */
+.grid-with-pri { grid-template-columns: 60px 1fr 1fr 1fr 35px; }
+.grid-without-pri { grid-template-columns: 60px 1fr 1fr 35px; }
+
+.process-id { font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.process-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.styled-input {
+    background: var(--input-bg); border: none; color: var(--text-main);
+    padding: 10px; border-radius: 10px; text-align: center; font-size: 15px; font-weight: 500; width: 100%; outline: none; transition: box-shadow 0.2s;
+}
+.styled-input:focus { box-shadow: 0 0 0 2px var(--ios-blue); }
+.btn-remove { background: var(--input-bg); color: var(--ios-red); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.btn-add { width: 100%; padding: 12px; background: transparent; color: var(--ios-blue); border: none; font-weight: 600; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+/* Segmented Controls (Tabs) */
+.algo-tabs { background: var(--segment-bg); padding: 4px; border-radius: 12px; display: flex; gap: 4px; margin-bottom: 12px; }
+.btn-algo { flex: 1; text-align: center; padding: 8px; border-radius: 8px; color: var(--text-main); cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; border: none; background: transparent; }
+
+.btn-action { width: 100%; padding: 14px; border: none; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer; color: white; background: var(--ios-blue); display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s; }
+.btn-action:active { transform: scale(0.98); }
+
+/* Gantt Chart & Metrics */
+.gantt-controls { display: flex; gap: 8px; }
+.btn-icon { background: var(--input-bg); color: var(--ios-blue); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
+.btn-play { background: var(--input-bg); color: var(--ios-blue); border: none; border-radius: 16px; padding: 6px 16px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+.gantt-wrapper { padding: 10px 10px 40px 10px; position: relative; }
+.gantt-timeline-track { display: flex; width: 100%; height: 50px; border-radius: 10px; overflow: hidden; background: var(--input-bg); border: 1px solid var(--border-color); }
+.gantt-block { display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 15px; position: relative; border-right: 1px solid rgba(255,255,255,0.3); transition: flex-grow 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+.gantt-block:last-child { border-right: none; }
+
+
+.metrics-grid { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 15px; 
+    margin-bottom: 20px; 
+}
+
+/* Memastikan kartu CPU UTIL berada di tengah bawah baris kedua */
+.cpu-util-wrapper {
+    grid-column: span 4; /* Melebar penuh */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Tetap mengikuti grid 4 kolom */
+    gap: 15px;
+}
+
+/* Jika ada Time Quantum, CPU Util menempati kolom 2, TQ kolom 3 */
+.cpu-util-box { grid-column: 2; }
+.quantum-box { grid-column: 3; }
+
+/* Jika TIDAK ada Time Quantum, CPU Util menempati kolom 2 (tengah) */
+.cpu-util-center { grid-column: 2 / span 2; display: flex; justify-content: center; }
+.metric-box { padding: 16px; border-radius: 16px; color: white; box-shadow: var(--shadow-card); }
+.metric-box.wt { background: var(--ios-orange); }
+.metric-box.tat { background: var(--ios-purple); }
+.metric-box.throughput { background: var(--ios-green); }
+.metric-box.quantum { background: var(--ios-blue); }
+.metric-box.rt { background: var(--ios-red); }
+.metric-box.cpu { background: var(--ios-indigo); }
+.metric-value { font-size: 26px; font-weight: 800; margin-top: 8px; }
+.metric-label { font-size: 12px; font-weight: 700; opacity: 0.95; }
+
+/* Tables & Ranks */
+.ios-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ios-table th { color: var(--text-muted); font-weight: 600; padding: 12px 10px; border-bottom: 1px solid var(--border-color); text-align: center; }
+.ios-table td { padding: 14px 10px; text-align: center; border-bottom: 1px solid var(--border-color); font-weight: 600;}
+.ios-table tr:last-child td { border-bottom: none; }
+
+.rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; color: white; font-size: 12px; font-weight: 800; margin-right: 8px; }
+.rank-1 { background: #FFD700; box-shadow: 0 2px 8px rgba(255, 215, 0, 0.5); color: #000; }
+.rank-2 { background: #C0C0C0; box-shadow: 0 2px 8px rgba(192, 192, 192, 0.5); color: #000; }
+.rank-3 { background: #CD7F32; box-shadow: 0 2px 8px rgba(205, 127, 50, 0.5); color: #fff; }
+.rank-other { background: rgba(142, 142, 147, 0.4); border: 1px solid var(--border-color); color: var(--text-main); }
+
+.error-msg { color: var(--ios-red); background: rgba(255, 59, 48, 0.1); padding: 16px; border-radius: 16px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+
+.chart-card {
+  background: var(--color-background-primary, #fff);
+  border: 0.5px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.5rem;
+}
+.chart-title {
+  font-size: 14px; font-weight: 500; margin: 0 0 4px;
+}
+.chart-subtitle {
+  font-size: 12px; opacity: 0.6; margin: 0 0 1rem;
+}
+.chart-legend {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  margin-bottom: 12px; font-size: 12px; opacity: 0.65;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+
+@media (prefers-color-scheme: dark) {
+  .chart-card { border-color: rgba(255,255,255,0.1); }
+}
