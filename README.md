@@ -1,40 +1,38 @@
-# Big Data Exploration Dashboard
+# Big Data Exploration & Data Insight Dashboard
 
-Dashboard web dibuat dengan Python + Streamlit berdasarkan data `data_clean.csv`.
-
-## Isi dashboard
-- KPI utama: total pesanan, total pembayaran, rata-rata nilai pesanan, tingkat pembatalan, tingkat retur kuantitas.
-- Grafik tren total pembayaran per bulan.
-- Perbandingan kategori produk, provinsi, dan metode pembayaran.
-- Filter tanggal, kategori, provinsi, status pesanan, dan metode pembayaran.
-- Interpretasi singkat otomatis.
-- Rekomendasi awal otomatis.
-- Preview dan download data terfilter.
-
-## Cara menjalankan
-
-1. Install Python 3.10+.
-2. Buka terminal pada folder proyek.
-3. Install library:
-
-```bash
-pip install -r requirements.txt
-```
-
-4. Jalankan:
-
-```bash
-streamlit run app.py
-```
-
-5. Buka alamat yang ditampilkan Streamlit, biasanya `http://localhost:8501`.
+Versi modular dari dashboard Python + Streamlit.
 
 ## Struktur
 
 ```text
-big_data_dashboard/
+Big_Data_Dashboard_Modular/
 ├── app.py
+├── config.py
+├── data_loader.py
+├── filters.py
+├── metrics.py
+├── charts.py
+├── ui.py
 ├── data_clean.csv
 ├── requirements.txt
 └── README.md
 ```
+
+## Fungsi tiap file
+
+- `app.py` → entry point dashboard.
+- `config.py` → lokasi file data.
+- `data_loader.py` → membaca dan membersihkan CSV.
+- `filters.py` → filter sidebar dan filtering data.
+- `metrics.py` → perhitungan KPI.
+- `charts.py` → visualisasi Plotly.
+- `ui.py` → CSS, header, KPI, interpretasi, rekomendasi, dan preview data.
+
+## Menjalankan
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Buka `http://localhost:8501`.
