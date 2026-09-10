@@ -5,15 +5,35 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-DATA_FILE = "data_clean.csv"
+# MENGGUNAKAN FILE SESUAI LAPORAN (Tingkat Pesanan)
+DATA_FILE = "data_pesanan_bersih.csv"
 
+# Fungsi standardisasi format Bulan (YYYY-MM) dari periode_analisis
+def parse_periode(val):
+    if pd.isna(val):
+        return np.nan
+    val_str = str(val).strip().split(' ')[0] 
+    if '/' in val_str:
+        # Menangani format M/D/YYYY
+        parts = val_str.split('/')
+        if len(parts) == 3:
+            return f"{parts[2]}-{parts[0].zfill(2)}" 
+    elif '-' in val_str:
+        # Menangani format YYYY-MM
+        parts = val_str.split('-')
+        if len(parts) >= 2:
+            return f"{parts[0]}-{parts[1].zfill(2)}"
+    return np.nan
+
+# LOAD DATA & PREPROCESSING
 if os.path.exists(DATA_FILE):
     df = pd.read_csv(DATA_FILE)
     
-    if "waktu_pesanan" in df.columns:
-        df["waktu_pesanan_dibuat"] = pd.to_datetime(df["waktu_pesanan"], errors="coerce")
+    # Hanya gunakan periode_analisis sebagai patokan waktu yang valid
+    if "periode_analisis" in df.columns:
+        df["periode_bersih"] = df["periode_analisis"].apply(parse_periode)
     else:
-        df["waktu_pesanan_dibuat"] = pd.NaT
+        df["periode_bersih"] = pd.NaT
 
     numeric_cols = [
         "jumlah_item_tercatat", "berat_pesanan_gr", "jumlah_retur", 
@@ -43,31 +63,31 @@ def rupiah(value):
 @app.route('/')
 def index():
     if df.empty:
-        return "File data_clean.csv tidak ditemukan atau kosong."
+        return f"File {DATA_FILE} tidak ditemukan atau kosong."
 
     cat_filter = request.args.get('category', '')
     prov_filter = request.args.get('province', '')
-    stat_filter = request.args.get('status', '')
-    pay_filter = request.args.get('payment', '')
+    start_month = request.args.get('start_month', '')
+    end_month = request.args.get('end_month', '')
 
     filtered_df = df.copy()
 
-    # Terapkan filter dari dropdown (kecuali filter kategori karena multi-value)
+    # Filter Provinsi
     if prov_filter and "Provinsi" in filtered_df.columns:
         filtered_df = filtered_df[filtered_df['Provinsi'] == prov_filter]
-    if stat_filter and "status_kelompok" in filtered_df.columns:
-        filtered_df = filtered_df[filtered_df['status_kelompok'] == stat_filter]
-    if pay_filter and "Metode Pembayaran" in filtered_df.columns:
-        filtered_df = filtered_df[filtered_df['Metode Pembayaran'] == pay_filter]
     
-    # Filter multi-kategori (memeriksa string mengandung kategori)
+    # Filter Multi-Kategori
     if cat_filter and "kategori_dalam_pesanan" in filtered_df.columns:
         filtered_df = filtered_df[filtered_df['kategori_dalam_pesanan'].str.contains(cat_filter, na=False, regex=False)]
+        
+    # Filter Rentang Waktu (HANYA BULAN & TAHUN)
+    if start_month and "periode_bersih" in filtered_df.columns:
+        filtered_df = filtered_df[filtered_df["periode_bersih"] >= start_month]
+    if end_month and "periode_bersih" in filtered_df.columns:
+        filtered_df = filtered_df[filtered_df["periode_bersih"] <= end_month]
 
-    # Pisahkan dataset khusus Selesai untuk metrik keuangan
     df_selesai = filtered_df[filtered_df["status_kelompok"] == "Selesai"] if "status_kelompok" in filtered_df.columns else pd.DataFrame()
 
-    # Hitung KPI Sesuai Laporan
     orders = filtered_df["order_id"].nunique() if "order_id" in filtered_df.columns else 0
     orders_selesai = df_selesai["order_id"].nunique() if "order_id" in df_selesai.columns else 0
     revenue_selesai = df_selesai["total_pembayaran_rp"].sum() if "total_pembayaran_rp" in df_selesai.columns else 0
@@ -85,7 +105,6 @@ def index():
         "cancel_rate": "{:.1f}%".format(cancel_rate)
     }
 
-    # Opsi Filter Khusus Kategori (Harus di-explode agar muncul rapi di opsi tunggal)
     def get_cat_options():
         if "kategori_dalam_pesanan" in df.columns:
             all_cats = df["kategori_dalam_pesanan"].dropna().str.split(r'\s*\|\s*').explode()
@@ -97,23 +116,40 @@ def index():
             return sorted(df[col_name].dropna().astype(str).unique().tolist())
         return []
 
+    # Ambil nilai minimum dan maksimum bulan untuk batas input di frontend
+    if not df["periode_bersih"].dropna().empty:
+        min_month = df["periode_bersih"].dropna().min()
+        max_month = df["periode_bersih"].dropna().max()
+    else:
+        min_month, max_month = '', ''
+
     filters = {
         "categories": get_cat_options(),
         "provinces": get_options("Provinsi"),
-        "statuses": get_options("status_kelompok"),
-        "payments": get_options("Metode Pembayaran")
+        "min_month": min_month,
+        "max_month": max_month
     }
 
-    # Visualisasi 1: Tren Pembayaran (Hanya Pesanan Selesai)
-    valid_dates = df_selesai.dropna(subset=["waktu_pesanan_dibuat"]).copy()
-    if not valid_dates.empty:
-        monthly = valid_dates.groupby(valid_dates["waktu_pesanan_dibuat"].dt.to_period("M"))["total_pembayaran_rp"].sum().reset_index()
-        trend_labels = monthly["waktu_pesanan_dibuat"].astype(str).tolist()
-        trend_data = monthly["total_pembayaran_rp"].tolist()
+    # AGREGASI DATA GRAFIK
+    
+    # 1. Tren Pembayaran & Jumlah Pesanan Bulanan
+    valid_df = df_selesai.copy().dropna(subset=["periode_bersih"])
+    
+    if not valid_df.empty:
+        monthly = valid_df.groupby("periode_bersih").agg({
+            "total_pembayaran_rp": "sum",
+            "order_id": "nunique"
+        }).reset_index()
+        
+        monthly = monthly.sort_values("periode_bersih")
+        
+        trend_labels = monthly["periode_bersih"].tolist()
+        trend_revenue = monthly["total_pembayaran_rp"].tolist()
+        trend_orders = monthly["order_id"].tolist()
     else:
-        trend_labels, trend_data = [], []
+        trend_labels, trend_revenue, trend_orders = [], [], []
 
-    # Visualisasi 2: Kategori Teratas berdasar Frekuensi (Di-explode & Selesai)
+    # 2. Kategori Produk Top 10
     if not df_selesai.empty and "kategori_dalam_pesanan" in df_selesai.columns:
         cat_df = df_selesai.copy()
         cat_df['kategori_split'] = cat_df['kategori_dalam_pesanan'].str.split(r'\s*\|\s*')
@@ -122,20 +158,32 @@ def index():
     else:
         cat = pd.Series()
 
-    # Visualisasi 3: Provinsi berdasar Pendapatan (Selesai)
+    # 3. Provinsi Top 10
     prov = df_selesai.groupby("Provinsi")["total_pembayaran_rp"].sum().sort_values(ascending=False).head(10) if "Provinsi" in df_selesai.columns else pd.Series()
     
-    # Visualisasi 4: Metode Pembayaran (Semua Status)
+    # 4. Metode Pembayaran
     pay = filtered_df.groupby("Metode Pembayaran")["order_id"].nunique().sort_values(ascending=False).head(10) if "Metode Pembayaran" in filtered_df.columns else pd.Series()
+    
+    # 5. Opsi Pengiriman
+    ship = filtered_df.groupby("Opsi Pengiriman")["order_id"].nunique().sort_values(ascending=False).head(10) if "Opsi Pengiriman" in filtered_df.columns else pd.Series()
+
+    # 6. Status Pesanan (Keseluruhan)
+    status = filtered_df.groupby("Status Pesanan")["order_id"].nunique().sort_values(ascending=False) if "Status Pesanan" in filtered_df.columns else pd.Series()
+
+    # 7. Alasan Pembatalan
+    df_batal = filtered_df[filtered_df["status_kelompok"] == "Batal"] if "status_kelompok" in filtered_df.columns else pd.DataFrame()
+    cancel = df_batal.groupby("Alasan Pembatalan")["order_id"].nunique().sort_values(ascending=False).head(5) if "Alasan Pembatalan" in df_batal.columns else pd.Series()
 
     charts = {
-        "trend": {"labels": trend_labels, "data": trend_data},
+        "trend": {"labels": trend_labels, "revenue": trend_revenue, "orders": trend_orders},
         "category": {"labels": cat.index.tolist(), "data": cat.values.tolist()},
         "province": {"labels": prov.index.tolist(), "data": prov.values.tolist()},
-        "payment": {"labels": pay.index.tolist(), "data": pay.values.tolist()}
+        "payment": {"labels": pay.index.tolist(), "data": pay.values.tolist()},
+        "shipping": {"labels": ship.index.tolist(), "data": ship.values.tolist()},
+        "status": {"labels": status.index.tolist(), "data": status.values.tolist()},
+        "cancel": {"labels": cancel.index.tolist(), "data": cancel.values.tolist()}
     }
 
-    # Interpretasi (Disesuaikan agar teks kategori menghasilkan format angka/pesanan, bukan rupiah)
     top_cat_name = cat.index[0] if not cat.empty else "Belum ada data"
     top_cat_val = f"{cat.iloc[0]:,}".replace(",", ".") if not cat.empty else "0"
     
