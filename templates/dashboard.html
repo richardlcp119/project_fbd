@@ -17,14 +17,6 @@
     
     <!-- Style Spesifik Khusus Dashboard Ini -->
     <style>
-        /* Menyesuaikan posisi tombol theme-toggle agar tidak terlalu ke ujung layar */
-        .app-header {
-            position: relative;
-        }
-        .theme-toggle {
-            right: 15px !important; /* Memberi jarak aman dari tepi kanan layar */
-        }
-        
         /* Elemen Select Kustom untuk Filter */
         .styled-select {
             background: var(--input-bg); color: var(--text-main); border: none;
@@ -48,38 +40,19 @@
             color: var(--text-main);
         }
 
-        /* Layout Grid KPI Fleksibel */
+        /* Layout Grid KPI */
         .kpi-grid {
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important; 
             gap: 15px;
         }
 
-        /* Penyesuaian Teks Angka KPI Panjang Agar Tidak Turun Baris */
+        /* Penyesuaian Teks Angka KPI Panjang agar tidak turun baris */
         .metric-value {
             font-size: clamp(18px, 1.8vw, 26px) !important;
             white-space: nowrap; 
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        /* Area Grafik */
-        .chart-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .chart-container {
-            position: relative;
-            height: 280px;
-            width: 100%;
-        }
-
-        /* Responsivitas untuk layar kecil / mobile */
-        @media (max-width: 900px) {
-            .dashboard-container { grid-template-columns: 1fr; }
-            .chart-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>

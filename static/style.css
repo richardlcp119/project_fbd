@@ -234,3 +234,27 @@ body {
 @media (prefers-color-scheme: dark) {
   .chart-card { border-color: rgba(255,255,255,0.1); }
 }
+
+/* --- Tambahan Responsivitas Dashboard (Area Grafik & Mobile) --- */
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.chart-container {
+    position: relative;
+    height: 280px;
+    width: 100%;
+}
+
+/* Responsivitas otomatis untuk layar kecil (Tablet & Mobile) */
+@media (max-width: 900px) {
+    .dashboard-container { 
+        grid-template-columns: 1fr; /* Mengubah layout 2 kolom jadi 1 kolom (atas-bawah) */
+    }
+    .chart-grid { 
+        grid-template-columns: 1fr; /* Grafik bar yang tadinya bersampingan jadi susun ke bawah */
+    }
+}
