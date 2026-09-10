@@ -92,6 +92,7 @@ body {
     text-align: center; 
     margin: 0 auto 40px; 
     max-width: 95%;
+    position: relative;
 }
 .app-header h1 { font-size: 46px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 4px; }
 .app-header .subtitle { color: var(--ios-purple); font-weight: 700; font-size: 16px; margin-bottom: 6px; letter-spacing: 0.5px; }
@@ -257,4 +258,17 @@ body {
     .chart-grid { 
         grid-template-columns: 1fr; /* Grafik bar yang tadinya bersampingan jadi susun ke bawah */
     }
+}
+
+/* --- Memaksa Chart.js agar tetap di dalam batas card saat sidebar dibuka --- */
+.chart-container canvas {
+    width: 100% !important;
+    max-width: 100%;
+    height: 100% !important;
+}
+
+/* Mencegah card melebar melebihi parent grid-nya */
+.card {
+    max-width: 100%;
+    overflow: hidden;
 }

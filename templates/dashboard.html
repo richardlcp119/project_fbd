@@ -5,19 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Big Data Sales Insight Dashboard</title>
     
-    <!-- Alpine.js untuk fitur Dark/Light Mode -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- Lucide untuk Icon -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Chart.js untuk Grafik -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     
-    <!-- Memanggil CSS Induk yang Reusable -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     
-    <!-- Style Spesifik Khusus Dashboard Ini -->
     <style>
-        /* Elemen Select Kustom untuk Filter */
         .styled-select {
             background: var(--input-bg); color: var(--text-main); border: none;
             padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 500; 
@@ -29,45 +23,42 @@
             font-size: 11px; color: var(--text-muted); display: block; 
             margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
         }
-        .sticky-sidebar {
-            position: sticky;
-            top: 20px;
-            height: max-content;
-            z-index: 10;
+        .styled-select option { background-color: var(--bg-base); color: var(--text-main); }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important; gap: 15px; }
+        .metric-value { font-size: clamp(18px, 1.8vw, 26px) !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dashboard-container { transition: grid-template-columns 0.4s cubic-bezier(0.25, 1, 0.5, 1), gap 0.4s; }
+        
+        @media (min-width: 901px) {
+            .dashboard-container.sidebar-is-closed { grid-template-columns: 0px 1fr !important; gap: 0 !important; }
+            .dashboard-container.sidebar-is-open { grid-template-columns: 360px 1fr !important; }
         }
-        .styled-select option {
-            background-color: var(--bg-base);
-            color: var(--text-main);
+        .sidebar-wrapper { overflow: hidden; height: 100%; }
+        .sidebar-reopen-btn {
+            position: fixed; left: 0; top: 25px; background: var(--bg-card); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color); border-left: none; padding: 12px 6px 12px 14px; border-radius: 0 50px 50px 0; cursor: pointer;
+            z-index: 100; box-shadow: 2px 4px 12px rgba(0,0,0,0.1); color: var(--text-main); display: flex; align-items: center; justify-content: center; transition: transform 0.2s;
         }
+        .sidebar-reopen-btn:hover { transform: scale(1.05); }
 
-        /* Layout Grid KPI */
-        .kpi-grid {
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important; 
-            gap: 15px;
-        }
-
-        /* Penyesuaian Teks Angka KPI Panjang agar tidak turun baris */
-        .metric-value {
-            font-size: clamp(18px, 1.8vw, 26px) !important;
-            white-space: nowrap; 
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        @media (max-width: 900px) { .dashboard-container.sidebar-is-closed .sidebar-wrapper { display: none; } }
+        .sidebar-content { width: 360px; }
+        @media (max-width: 900px) { .sidebar-content { width: 100%; } }
     </style>
 </head>
 
-<body x-data="{ darkMode: localStorage.getItem('theme') === 'dark' }" 
+<body x-data="{ darkMode: localStorage.getItem('theme') === 'dark', sidebarOpen: window.innerWidth > 900 }" 
       :class="{ 'dark': darkMode }" 
       x-init="$watch('darkMode', val => localStorage.setItem('theme', val ? 'dark' : 'light'))">
 
-    <!-- Ambient Background -->
     <div class="ambient-bg">
         <div class="orb-1"></div>
         <div class="orb-2"></div>
     </div>
 
-    <!-- Header Dashboard -->
+    <button x-show="!sidebarOpen" @click="sidebarOpen = true" class="sidebar-reopen-btn" title="Buka Sidebar">
+        <i data-lucide="chevron-right"></i>
+    </button>
+
     <div class="app-header">
         <h1 class="text-gradient">Big Data Exploration</h1>
         <div class="subtitle">Data Insight Dashboard</div>
@@ -78,101 +69,100 @@
         </button>
     </div>
 
-    <div class="dashboard-container">
-        <!-- ===================================== -->
-        <!-- KOLOM KIRI: FILTER DATA               -->
-        <!-- ===================================== -->
-        <div class="sticky-sidebar">
-            <form id="filterForm" method="GET" action="/">
-                <div class="card">
-                    <div class="card-header"><i data-lucide="search"></i> Filter Data</div>
-                    
-                    <label class="filter-label">Kategori Produk</label>
-                    <select name="category" class="styled-select">
-                        <option value="">-- Semua Kategori --</option>
-                        {% for item in filters.categories %}
-                            <option value="{{ item }}" {% if request.args.get('category') == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
+    <div class="dashboard-container" :class="sidebarOpen ? 'sidebar-is-open' : 'sidebar-is-closed'">
+        
+        <div class="sidebar-wrapper" :style="sidebarOpen ? 'opacity: 1; pointer-events: auto; transition: opacity 0.3s 0.1s;' : 'opacity: 0; pointer-events: none; transition: opacity 0.1s;'">
+            <div class="sidebar-content">
+                <form id="filterForm" method="GET" action="/" style="position: sticky; top: 20px;">
+                    <div class="card">
+                        <div class="card-header" style="justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="search"></i> Filter Data
+                            </div>
+                            <button type="button" @click="sidebarOpen = false" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;">
+                                <i data-lucide="x" style="width: 20px;"></i>
+                            </button>
+                        </div>
+                        
+                        <label class="filter-label">Kategori Produk</label>
+                        <select name="category" class="styled-select">
+                            <option value="">-- Semua Kategori --</option>
+                            {% for item in filters.categories %}
+                                <option value="{{ item }}" {% if request.args.get('category') == item %}selected{% endif %}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
 
-                    <label class="filter-label">Provinsi</label>
-                    <select name="province" class="styled-select">
-                        <option value="">-- Semua Provinsi --</option>
-                        {% for item in filters.provinces %}
-                            <option value="{{ item }}" {% if request.args.get('province') == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
+                        <label class="filter-label">Provinsi</label>
+                        <select name="province" class="styled-select">
+                            <option value="">-- Semua Provinsi --</option>
+                            {% for item in filters.provinces %}
+                                <option value="{{ item }}" {% if request.args.get('province') == item %}selected{% endif %}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
 
-                    <label class="filter-label">Status Pesanan</label>
-                    <select name="status" class="styled-select">
-                        <option value="">-- Semua Status --</option>
-                        {% for item in filters.statuses %}
-                            <option value="{{ item }}" {% if request.args.get('status') == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
+                        <label class="filter-label">Status Pesanan</label>
+                        <select name="status" class="styled-select">
+                            <option value="">-- Semua Status --</option>
+                            {% for item in filters.statuses %}
+                                <option value="{{ item }}" {% if request.args.get('status') == item %}selected{% endif %}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
 
-                    <label class="filter-label">Metode Pembayaran</label>
-                    <select name="payment" class="styled-select">
-                        <option value="">-- Semua Metode --</option>
-                        {% for item in filters.payments %}
-                            <option value="{{ item }}" {% if request.args.get('payment') == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
+                        <label class="filter-label">Metode Pembayaran</label>
+                        <select name="payment" class="styled-select">
+                            <option value="">-- Semua Metode --</option>
+                            {% for item in filters.payments %}
+                                <option value="{{ item }}" {% if request.args.get('payment') == item %}selected{% endif %}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
 
-                    <button type="submit" class="btn-action" style="margin-top: 5px;">
-                        <i data-lucide="filter" style="fill: white; width: 18px;"></i> Terapkan Filter
-                    </button>
-                    
-                    <a href="/" style="display: block; text-align: center; margin-top: 15px; font-size: 13px; color: var(--ios-red); text-decoration: none; font-weight: 600;">Reset Filter</a>
-                </div>
-            </form>
+                        <button type="submit" class="btn-action" style="margin-top: 5px;">
+                            <i data-lucide="filter" style="fill: white; width: 18px;"></i> Terapkan Filter
+                        </button>
+                        
+                        <a href="/" style="display: block; text-align: center; margin-top: 15px; font-size: 13px; color: var(--ios-red); text-decoration: none; font-weight: 600;">Reset Filter</a>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <!-- ===================================== -->
-        <!-- KOLOM KANAN: METRICS & VISUALISASI    -->
-        <!-- ===================================== -->
         <div>
-            <!-- Grid KPI -->
+            <!-- Grid KPI Diperbarui Berdasarkan Laporan -->
             <div class="kpi-grid">
                 <div class="metric-box" style="background: var(--ios-blue);">
                     <div class="metric-label">TOTAL PESANAN</div>
                     <div class="metric-value">{{ kpi.orders }}</div>
                 </div>
                 <div class="metric-box" style="background: var(--ios-green);">
+                    <div class="metric-label">PESANAN SELESAI</div>
+                    <div class="metric-value">{{ kpi.orders_selesai }}</div>
+                </div>
+                <div class="metric-box" style="background: var(--ios-purple);">
                     <div class="metric-label">TOTAL PEMBAYARAN</div>
                     <div class="metric-value">{{ kpi.revenue }}</div>
                 </div>
-                <div class="metric-box" style="background: var(--ios-purple);">
+                <div class="metric-box" style="background: var(--ios-orange);">
                     <div class="metric-label">RATA-RATA / PESANAN</div>
                     <div class="metric-value">{{ kpi.avg_order }}</div>
                 </div>
-                <div class="metric-box" style="background: var(--ios-orange);">
+                <div class="metric-box" style="background: var(--ios-red);">
                     <div class="metric-label">TINGKAT BATAL</div>
                     <div class="metric-value">{{ kpi.cancel_rate }}</div>
                 </div>
-                <div class="metric-box" style="background: var(--ios-red);">
-                    <div class="metric-label">TINGKAT RETUR</div>
-                    <div class="metric-value">{{ kpi.return_rate }}</div>
-                </div>
             </div>
 
-            <!-- ===================================== -->
-            <!-- BLOK INTERPRETASI & REKOMENDASI       -->
-            <!-- ===================================== -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
-                
-                <!-- Interpretasi Singkat -->
+            <!-- Interpretasi Teks Diperbarui (Menggunakan Satuan Pesanan) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
                 <div class="card" style="margin-bottom: 0; border-left: 4px solid var(--ios-blue);">
                     <div class="card-header" style="margin-bottom: 8px; font-size: 15px;">
                         <i data-lucide="lightbulb" style="color: var(--ios-blue); width: 18px;"></i> Interpretasi Singkat
                     </div>
                     <p style="font-size: 13px; line-height: 1.6; color: var(--text-muted); font-weight: 500;">
-                        Dari data yang difilter, kategori dengan kontribusi terbesar adalah <strong style="color: var(--text-main);">{{ insights.top_category }}</strong> dengan total <strong style="color: var(--text-main);">{{ insights.top_category_val }}</strong>. 
-                        Wilayah pemesanan tertinggi berasal dari provinsi <strong style="color: var(--text-main);">{{ insights.top_province }}</strong>.
+                        Dari data yang difilter, kategori yang paling sering muncul adalah <strong style="color: var(--text-main);">{{ insights.top_category }}</strong> sebanyak <strong style="color: var(--text-main);">{{ insights.top_category_val }} pesanan</strong>. 
+                        Wilayah dengan kontribusi pembayaran tertinggi berasal dari provinsi <strong style="color: var(--text-main);">{{ insights.top_province }}</strong> dengan total <strong style="color: var(--text-main);">{{ insights.top_province_val }}</strong>.
                     </p>
                 </div>
 
-                <!-- Rekomendasi -->
                 <div class="card" style="--rec-color: {{ insights.rec_color }}; margin-bottom: 0; border-left: 4px solid var(--rec-color);">
                     <div class="card-header" style="margin-bottom: 8px; font-size: 15px;">
                         <i data-lucide="target" style="color: var(--rec-color); width: 18px;"></i> Rekomendasi Awal
@@ -182,37 +172,33 @@
                         Fokuskan stok dan promosi pada <strong style="color: var(--text-main);">{{ insights.top_category }}</strong> di area <strong style="color: var(--text-main);">{{ insights.top_province }}</strong>.
                     </p>
                 </div>
-                
             </div>
-            <!-- ===================================== -->
 
-            <!-- Grafik Tren -->
+            <!-- Grafik Judul Disesuaikan Top 10 -->
             <div class="card" style="margin-top: 20px;">
-                <div class="card-header"><i data-lucide="trending-up"></i> Tren Total Pembayaran per Bulan</div>
+                <div class="card-header"><i data-lucide="trending-up"></i> Tren Pembayaran Pesanan Selesai per Bulan</div>
                 <div class="chart-container" style="height: 250px;">
                     <canvas id="trendChart"></canvas>
                 </div>
             </div>
 
-            <!-- Grafik Kategori & Provinsi -->
             <div class="chart-grid">
                 <div class="card" style="margin-bottom: 0;">
-                    <div class="card-header"><i data-lucide="tag"></i> Top 10 Kategori</div>
+                    <div class="card-header"><i data-lucide="tag"></i> 10 Kategori Teratas (Pesanan Selesai)</div>
                     <div class="chart-container">
                         <canvas id="catChart"></canvas>
                     </div>
                 </div>
                 <div class="card" style="margin-bottom: 0;">
-                    <div class="card-header"><i data-lucide="map-pin"></i> Top 8 Provinsi</div>
+                    <div class="card-header"><i data-lucide="map-pin"></i> 10 Provinsi Teratas (Pembayaran Selesai)</div>
                     <div class="chart-container">
                         <canvas id="provChart"></canvas>
                     </div>
                 </div>
             </div>
             
-            <!-- Grafik Metode Pembayaran -->
             <div class="card" style="margin-top: 20px;">
-                <div class="card-header"><i data-lucide="credit-card"></i> Pesanan per Metode Pembayaran</div>
+                <div class="card-header"><i data-lucide="credit-card"></i> 10 Metode Pembayaran Terbanyak</div>
                 <div class="chart-container" style="height: 250px;">
                     <canvas id="payChart"></canvas>
                 </div>
@@ -225,9 +211,6 @@
         {{ charts | tojson | safe }}
     </script>
 
-    <!-- ===================================== -->
-    <!-- SCRIPT RENDER GRAFIK CHART.JS         -->
-    <!-- ===================================== -->
     <script>
         lucide.createIcons();
         const chartData = JSON.parse(document.getElementById('chartDataJson').textContent);
@@ -235,7 +218,6 @@
         Chart.defaults.color = 'rgba(142, 142, 147, 0.9)';
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif';
 
-        // 1. Grafik Tren (Line)
         new Chart(document.getElementById('trendChart'), {
             type: 'line',
             data: {
@@ -274,45 +256,21 @@
             }
         };
 
-        // 2. Grafik Kategori
         new Chart(document.getElementById('catChart'), {
             type: 'bar',
-            data: {
-                labels: chartData.category.labels,
-                datasets: [{
-                    data: chartData.category.data,
-                    backgroundColor: '#30D158',
-                    borderRadius: 6
-                }]
-            },
+            data: { labels: chartData.category.labels, datasets: [{ data: chartData.category.data, backgroundColor: '#30D158', borderRadius: 6 }] },
             options: barOptions
         });
 
-        // 3. Grafik Provinsi
         new Chart(document.getElementById('provChart'), {
             type: 'bar',
-            data: {
-                labels: chartData.province.labels,
-                datasets: [{
-                    data: chartData.province.data,
-                    backgroundColor: '#FF9F0A',
-                    borderRadius: 6
-                }]
-            },
+            data: { labels: chartData.province.labels, datasets: [{ data: chartData.province.data, backgroundColor: '#FF9F0A', borderRadius: 6 }] },
             options: barOptions
         });
 
-        // 4. Grafik Metode Pembayaran
         new Chart(document.getElementById('payChart'), {
             type: 'bar',
-            data: {
-                labels: chartData.payment.labels,
-                datasets: [{
-                    data: chartData.payment.data,
-                    backgroundColor: '#BF5AF2',
-                    borderRadius: 6
-                }]
-            },
+            data: { labels: chartData.payment.labels, datasets: [{ data: chartData.payment.data, backgroundColor: '#BF5AF2', borderRadius: 6 }] },
             options: barOptions
         });
     </script>
