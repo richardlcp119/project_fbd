@@ -197,10 +197,8 @@ def index():
     top_prov_val = rupiah(prov.iloc[0]) if not prov.empty else "Rp 0"
 
     if cancel_rate >= 10:
-        rec_text = "Prioritaskan analisis alasan pembatalan dan evaluasi proses karena proporsi pembatalan relatif tinggi (di atas 10%)."
         rec_color = "var(--ios-red)"
     else:
-        rec_text = "Pertahankan proses fulfillment yang ada. Tingkat pembatalan masih dalam batas aman."
         rec_color = "var(--ios-green)"
 
     insights = {
@@ -208,7 +206,8 @@ def index():
         "top_category_val": top_cat_val,
         "top_province": top_prov_name,
         "top_province_val": top_prov_val,
-        "recommendation": rec_text,
+        "cancel_rate_val": "{:.1f}".format(cancel_rate),
+        "is_high_cancel": cancel_rate >= 10,
         "rec_color": rec_color
     }
 

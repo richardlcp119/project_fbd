@@ -32,7 +32,15 @@
             .dashboard-container.sidebar-is-closed { grid-template-columns: 0px 1fr !important; gap: 0 !important; }
             .dashboard-container.sidebar-is-open { grid-template-columns: 360px 1fr !important; }
         }
-        .sidebar-wrapper { overflow: hidden; height: 100%; }
+        .sidebar-wrapper { 
+            position: sticky; 
+            top: 20px; 
+            align-self: start; 
+            max-height: calc(100vh - 40px); 
+            overflow-y: auto; 
+            overflow-x: hidden;
+            z-index: 999;
+        }
         .sidebar-reopen-btn {
             position: fixed; left: 0; top: 25px; background: var(--bg-card); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
             border: 1px solid var(--border-color); border-left: none; padding: 12px 6px 12px 14px; border-radius: 0 50px 50px 0; cursor: pointer;
@@ -76,7 +84,7 @@
         
         <div class="sidebar-wrapper" :style="sidebarOpen ? 'opacity: 1; pointer-events: auto; transition: opacity 0.3s 0.1s;' : 'opacity: 0; pointer-events: none; transition: opacity 0.1s;'">
             <div class="sidebar-content">
-                <form id="filterForm" method="GET" action="/" style="position: sticky; top: 20px;">
+                <form id="filterForm" method="GET" action="/">
                     <div class="card">
                         <div class="card-header" style="justify-content: space-between;">
                             <div style="display: flex; align-items: center; gap: 8px;">
@@ -217,25 +225,32 @@
 
             <!-- BAGIAN INSIGHT DIPINDAH KE BAWAH -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+    
                 <div class="card" style="margin-bottom: 0; border-left: 4px solid var(--ios-blue);">
-                    <div class="card-header" style="margin-bottom: 8px; font-size: 15px;">
+                    <div class="card-header" style="margin-bottom: 12px; font-size: 15px;">
                         <i data-lucide="lightbulb" style="color: var(--ios-blue); width: 18px;"></i> Interpretasi Singkat
                     </div>
-                    <p style="font-size: 13px; line-height: 1.6; color: var(--text-muted); font-weight: 500;">
-                        Dari data yang difilter, kategori yang paling sering muncul adalah <strong style="color: var(--text-main);">{{ insights.top_category }}</strong> sebanyak <strong style="color: var(--text-main);">{{ insights.top_category_val }} pesanan</strong>. 
-                        Wilayah dengan kontribusi pembayaran tertinggi berasal dari provinsi <strong style="color: var(--text-main);">{{ insights.top_province }}</strong> dengan total <strong style="color: var(--text-main);">{{ insights.top_province_val }}</strong>.
-                    </p>
+                    <ul style="font-size: 13px; line-height: 1.8; color: var(--text-muted); font-weight: 500; margin: 0; padding-left: 20px;">
+                        <li><strong>Produk Dominan:</strong> Kategori <span style="color: var(--text-main);">{{ insights.top_category }}</span> memimpin dengan <span style="color: var(--text-main);">{{ insights.top_category_val }}</span> pesanan.</li>
+                        <li><strong>Wilayah Kunci:</strong> <span style="color: var(--text-main);">{{ insights.top_province }}</span> menyumbang pendapatan tertinggi sebesar <span style="color: var(--text-main);">{{ insights.top_province_val }}</span>.</li>
+                        <li><strong>Kesehatan Transaksi:</strong> Tingkat pembatalan berada di angka <span style="color: var(--text-main);">{{ insights.cancel_rate_val }}%</span>.</li>
+                    </ul>
                 </div>
 
                 <div class="card" style="--rec-color: {{ insights.rec_color }}; margin-bottom: 0; border-left: 4px solid var(--rec-color);">
-                    <div class="card-header" style="margin-bottom: 8px; font-size: 15px;">
+                    <div class="card-header" style="margin-bottom: 12px; font-size: 15px;">
                         <i data-lucide="target" style="color: var(--rec-color); width: 18px;"></i> Rekomendasi Awal
                     </div>
-                    <p style="font-size: 13px; line-height: 1.6; color: var(--text-muted); font-weight: 500;">
-                        {{ insights.recommendation }}
-                        Fokuskan stok dan promosi pada <strong style="color: var(--text-main);">{{ insights.top_category }}</strong> di area <strong style="color: var(--text-main);">{{ insights.top_province }}</strong>.
-                    </p>
+                    <ul style="font-size: 13px; line-height: 1.8; color: var(--text-muted); font-weight: 500; margin: 0; padding-left: 20px;">
+                        <li>Prioritaskan alokasi persediaan dan kampanye promosi untuk <strong>{{ insights.top_category }}</strong> di wilayah <strong>{{ insights.top_province }}</strong>.</li>
+                        {% if insights.is_high_cancel %}
+                        <li>Tingkat pembatalan melebihi batas aman (10%). Segera evaluasi alasan pembatalan terbanyak dan periksa kemudahan antarmuka (<em>UI/UX</em>) pada proses pembayaran.</li>
+                        {% else %}
+                        <li>Pertahankan standar operasional pemenuhan pesanan saat ini. Tingkat pembatalan transaksi masih terkendali dengan baik.</li>
+                        {% endif %}
+                    </ul>
                 </div>
+
             </div>
             
         </div>
