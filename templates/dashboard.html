@@ -151,11 +151,19 @@
                 </div>
             </div>
 
-            <!-- Grafik Tren -->
+            <!-- Grafik Tren Pembayaran (Atas) -->
             <div class="card" style="margin-top: 20px;">
-                <div class="card-header"><i data-lucide="trending-up"></i> Tren Pembayaran dan Pesanan per Bulan</div>
+                <div class="card-header"><i data-lucide="trending-up"></i> Tren Pembayaran (Rp) per Bulan</div>
                 <div class="chart-container" style="height: 280px;">
-                    <canvas id="trendChart"></canvas>
+                    <canvas id="trendRevenueChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Grafik Tren Pesanan (Bawah) -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header"><i data-lucide="bar-chart-2"></i> Tren Jumlah Pesanan per Bulan</div>
+                <div class="chart-container" style="height: 280px;">
+                    <canvas id="trendOrdersChart"></canvas>
                 </div>
             </div>
 
@@ -244,50 +252,62 @@
         Chart.defaults.color = 'rgba(142, 142, 147, 0.9)';
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif';
 
-        // 1. Grafik Tren (Double Axis)
-        new Chart(document.getElementById('trendChart'), {
+        // 1A. Grafik Tren Pembayaran
+        new Chart(document.getElementById('trendRevenueChart'), {
             type: 'line',
             data: {
                 labels: chartData.trend.labels,
-                datasets: [
-                    {
-                        label: 'Total Pembayaran (Rp)',
-                        data: chartData.trend.revenue,
-                        borderColor: '#0A84FF',
-                        backgroundColor: 'rgba(10, 132, 255, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#0A84FF',
-                        pointRadius: 4,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Jumlah Pesanan',
-                        data: chartData.trend.orders,
-                        borderColor: '#30D158',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        borderDash: [5, 5],
-                        tension: 0.4,
-                        pointBackgroundColor: '#30D158',
-                        pointRadius: 4,
-                        yAxisID: 'y1'
-                    }
-                ]
+                datasets: [{
+                    label: 'Total Pembayaran (Rp)',
+                    data: chartData.trend.revenue,
+                    borderColor: '#0A84FF',
+                    backgroundColor: 'rgba(10, 132, 255, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#0A84FF',
+                    pointRadius: 4
+                }]
             },
             options: { 
                 responsive: true, 
                 maintainAspectRatio: false, 
-                plugins: { legend: { display: true, position: 'top' } },
+                plugins: { legend: { display: false } }, // Disembunyikan karena judul card sudah jelas
                 scales: {
                     y: { 
-                        type: 'linear', display: true, position: 'left',
+                        beginAtZero: true, 
                         grid: { color: 'rgba(142, 142, 147, 0.1)' } 
                     },
-                    y1: { 
-                        type: 'linear', display: true, position: 'right',
-                        grid: { drawOnChartArea: false } 
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 1B. Grafik Tren Pesanan
+        new Chart(document.getElementById('trendOrdersChart'), {
+            type: 'line',
+            data: {
+                labels: chartData.trend.labels,
+                datasets: [{
+                    label: 'Jumlah Pesanan Selesai',
+                    data: chartData.trend.orders,
+                    borderColor: '#30D158',
+                    backgroundColor: 'rgba(48, 209, 88, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#30D158',
+                    pointRadius: 4
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } }, 
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(142, 142, 147, 0.1)' } 
                     },
                     x: { grid: { display: false } }
                 }

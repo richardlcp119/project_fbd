@@ -168,11 +168,17 @@ def index():
     ship = filtered_df.groupby("Opsi Pengiriman")["order_id"].nunique().sort_values(ascending=False).head(10) if "Opsi Pengiriman" in filtered_df.columns else pd.Series()
 
     # 6. Status Pesanan (Keseluruhan)
-    status = filtered_df.groupby("Status Pesanan")["order_id"].nunique().sort_values(ascending=False) if "Status Pesanan" in filtered_df.columns else pd.Series()
+    status = filtered_df.groupby("status_kelompok")["order_id"].nunique().sort_values(ascending=False) if "status_kelompok" in filtered_df.columns else pd.Series()
 
     # 7. Alasan Pembatalan
     df_batal = filtered_df[filtered_df["status_kelompok"] == "Batal"] if "status_kelompok" in filtered_df.columns else pd.DataFrame()
-    cancel = df_batal.groupby("Alasan Pembatalan")["order_id"].nunique().sort_values(ascending=False).head(5) if "Alasan Pembatalan" in df_batal.columns else pd.Series()
+
+    if "alasan_pembatalan_analisis" in df_batal.columns:
+        cancel = df_batal.groupby("alasan_pembatalan_analisis")["order_id"].nunique().sort_values(ascending=False).head(5)
+        # Memotong string teks yang panjang, hanya mengambil inti alasan setelah "Alasan:"
+        cancel.index = cancel.index.astype(str).str.split('Alasan:').str[-1].str.strip()
+    else:
+        cancel = pd.Series()
 
     charts = {
         "trend": {"labels": trend_labels, "revenue": trend_revenue, "orders": trend_orders},
