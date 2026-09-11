@@ -54,13 +54,10 @@
         }
 
         /* Mobile Layout (Layar HP/Tablet) */
+        /* 1. Mobile Layout Umum (HP & Tablet) */
         @media (max-width: 900px) { 
             .dashboard-container.sidebar-is-closed .sidebar-wrapper { display: none; } 
             .status-row { grid-template-columns: 1fr !important; } 
-            
-            /* PERBAIKAN 3: Diberi batas maksimal di HP agar menjadi kotak rapi, tidak memanjang ke sudut layar */
-            .sidebar-content { max-width: 300px; margin: 0 auto; }
-            
             .theme-toggle {
                 position: relative;
                 top: auto;
@@ -68,6 +65,29 @@
                 transform: none;
                 margin-top: 20px;
                 display: inline-block;
+            }
+        }
+
+        /* 2. Mode Potret (HP Berdiri) -> Filter Fill Kanan Kiri */
+        @media (max-width: 900px) and (orientation: portrait) {
+            .sidebar-content { max-width: none; width: 100%; }
+        }
+
+        /* 3. Mode Lanskap (HP Mendatar) -> Melayang di Kanan (Overlay) */
+        @media (max-width: 900px) and (orientation: landscape) {
+            .sidebar-wrapper {
+                position: fixed !important; /* Memaksa elemen lepas dari dokumen agar konten tidak tergeser */
+                top: 10px;
+                left: 10px;
+                width: 300px;
+                max-height: calc(100vh - 20px);
+                z-index: 9999;
+            }
+            .sidebar-content { width: 100%; }
+            .sidebar-wrapper .card {
+                /* Memberi efek bayangan tegas agar kontras dengan grafik di belakangnya */
+                box-shadow: 5px 10px 40px rgba(0,0,0,0.6) !important; 
+                border: 1px solid rgba(255,255,255,0.1);
             }
         }
     </style>
