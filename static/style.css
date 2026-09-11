@@ -153,7 +153,22 @@ body {
 .algo-tabs { background: var(--segment-bg); padding: 4px; border-radius: 12px; display: flex; gap: 4px; margin-bottom: 12px; }
 .btn-algo { flex: 1; text-align: center; padding: 8px; border-radius: 8px; color: var(--text-main); cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; border: none; background: transparent; }
 
-.btn-action { width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; color: white; background: var(--ios-blue); display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s; }
+.btn-action { 
+    width: 100%; 
+    padding: 8px; /* Ditipiskan lagi dari 10px menjadi 8px */
+    border: none; 
+    border-radius: 8px; 
+    font-weight: 600; /* Diturunkan dari 700 (Bold) menjadi 600 (Semi-bold) agar tidak terlalu berat */
+    font-size: 14px; /* Disamakan persis dengan ukuran teks input (12px) */
+    cursor: pointer; 
+    color: white; 
+    background: var(--ios-blue); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 6px; 
+    transition: transform 0.1s; 
+}
 .btn-action:active { transform: scale(0.98); }
 
 /* Gantt Chart & Metrics */
