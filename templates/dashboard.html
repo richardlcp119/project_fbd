@@ -14,19 +14,21 @@
     <style>
         .styled-select {
             background: var(--input-bg); color: var(--text-main); border: none;
-            padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 500; 
-            width: 100%; margin-bottom: 16px; outline: none; transition: box-shadow 0.2s; 
+            padding: 8px 10px; border-radius: 8px; font-size: 12px; font-weight: 500; 
+            width: 100%; margin-bottom: 12px; outline: none; transition: box-shadow 0.2s; 
             appearance: none; cursor: pointer;
         }
         .styled-select:focus { box-shadow: 0 0 0 2px var(--ios-blue); }
         .filter-label { 
-            font-size: 11px; color: var(--text-muted); display: block; 
-            margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            font-size: 10px; color: var(--text-muted); display: block; 
+            margin-bottom: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
         }
         .styled-select option { background-color: var(--bg-base); color: var(--text-main); }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important; gap: 15px; }
-        .metric-value { font-size: clamp(18px, 1.8vw, 26px) !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .dashboard-container { transition: grid-template-columns 0.4s cubic-bezier(0.25, 1, 0.5, 1), gap 0.4s; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important; gap: 12px; }
+        .metric-value { font-size: clamp(16px, 1.5vw, 22px) !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* PERBAIKAN 1: Jadikan 100% agar terhindar dari penyakit teks terpotong */
+        .sidebar-content { width: 100%; }
         
         .sidebar-wrapper { 
             position: sticky; 
@@ -43,19 +45,22 @@
             z-index: 100; box-shadow: 2px 4px 12px rgba(0,0,0,0.1); color: var(--text-main); display: flex; align-items: center; justify-content: center; transition: transform 0.2s;
         }
         .sidebar-reopen-btn:hover { transform: scale(1.05); }
-        .sidebar-content { width: 360px; }
 
         /* Desktop Layout (Layar Lebar) */
         @media (min-width: 901px) {
             .dashboard-container.sidebar-is-closed { grid-template-columns: 0px 1fr !important; gap: 0 !important; }
-            .dashboard-container.sidebar-is-open { grid-template-columns: 360px 1fr !important; }
+            /* PERBAIKAN 2: Dikecilkan ukurannya menjadi 300px agar hemat tempat */
+            .dashboard-container.sidebar-is-open { grid-template-columns: 300px 1fr !important; }
         }
 
         /* Mobile Layout (Layar HP/Tablet) */
         @media (max-width: 900px) { 
             .dashboard-container.sidebar-is-closed .sidebar-wrapper { display: none; } 
             .status-row { grid-template-columns: 1fr !important; } 
-            .sidebar-content { width: 100%; }
+            
+            /* PERBAIKAN 3: Diberi batas maksimal di HP agar menjadi kotak rapi, tidak memanjang ke sudut layar */
+            .sidebar-content { max-width: 300px; margin: 0 auto; }
+            
             .theme-toggle {
                 position: relative;
                 top: auto;
@@ -123,20 +128,20 @@
                         </select>
 
                         <label class="filter-label">Rentang Waktu (Bulan)</label>
-                        <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-                            <!-- Diubah menjadi type="month" dan variabel 'start_month' -->
-                            <input type="month" name="start_month" class="styled-select" style="margin-bottom: 0; padding: 10px;" 
+                        <div style="display: flex; gap: 6px; margin-bottom: 16px;">
+                            <!-- Input Mulai -->
+                            <input type="month" name="start_month" class="styled-select" style="margin-bottom: 0; padding: 8px 6px;" 
                                 value="{{ request.args.get('start_month', '') }}" min="{{ filters.min_month }}" max="{{ filters.max_month }}">
                             
                             <span style="display: flex; align-items: center; color: var(--text-muted); font-weight: bold;">-</span>
                             
-                            <!-- Diubah menjadi type="month" dan variabel 'end_month' -->
-                            <input type="month" name="end_month" class="styled-select" style="margin-bottom: 0; padding: 10px;" 
+                            <!-- Input Akhir -->
+                            <input type="month" name="end_month" class="styled-select" style="margin-bottom: 0; padding: 8px 6px;" 
                                 value="{{ request.args.get('end_month', '') }}" min="{{ filters.min_month }}" max="{{ filters.max_month }}">
                         </div>
 
                         <button type="submit" class="btn-action" style="margin-top: 5px;">
-                            <i data-lucide="filter" style="fill: white; width: 18px;"></i> Terapkan Filter
+                            <i data-lucide="filter" style="fill: white; width: 15px;"></i> Terapkan Filter
                         </button>
                         
                         <a href="/" style="display: block; text-align: center; margin-top: 15px; font-size: 13px; color: var(--ios-red); text-decoration: none; font-weight: 600;">Reset Filter</a>
